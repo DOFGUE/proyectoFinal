@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Reseña - RecetasApp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/user/home">
+                <i class="bi bi-book-fill"></i> RecetasApp
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user/home">
+                            <i class="bi bi-speedometer2"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user/profile">
+                            <i class="bi bi-person"></i> Mi Perfil
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Barra de búsqueda -->
+                <form class="d-flex mx-auto" action="/user/buscar" method="get" style="max-width: 400px; width: 100%;">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Buscar productos..." name="q" 
+                               aria-label="Buscar productos" style="border-radius: 20px 0 0 20px;">
+                        <button class="btn btn-outline-light" type="submit" style="border-radius: 0 20px 20px 0; border-left: none;">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+                
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="navbar-text text-white me-3">
+                            <i class="bi bi-person-circle"></i> <span sec:authentication="name"></span>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="bi bi-box-arrow-right"></i> Salir
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- Encabezado -->
+                <div class="mb-4">
+                    <a href="/user/profile" class="btn btn-outline-primary btn-sm mb-3">
+                        <i class="bi bi-arrow-left"></i> Volver al Perfil
+                    </a>
+                    <h1 class="mb-2">
+                        <i class="bi bi-pencil text-warning"></i> Editar Reseña
+                    </h1>
+                    <p class="text-muted">Actualiza tu opinión sobre <strong th:text="${producto.nombreProducto}"></strong></p>
+                </div>
+
+                <!-- Tarjeta del Producto -->
+                <div class="card shadow-sm mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <img th:src="'/' + ${producto.rutaImagenProducto}" 
+                                     alt="${producto.nombreProducto}" 
+                                     class="img-fluid rounded" style="height: 150px; width: 100%; object-fit: cover;">
+                            </div>
+                            <div class="col-md-8">
+                                <h5 class="card-title" th:text="${producto.nombreProducto}"></h5>
+                                <p class="card-text text-muted small" th:text="${#strings.abbreviate(producto.descripcionProducto, 100)}"></p>
+                                <div class="d-flex gap-3">
+                                    <span class="badge bg-primary" th:text="'$' + ${producto.precioProducto}"></span>
+                                    <div>
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        <span th:text="${producto.calificacionProducto}"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alertas -->
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle"></i> <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Formulario de Reseña -->
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <form method="post" th:action="'/user/reviews/edit/' + ${resena.idResena}">
+                            
+                            <!-- Calificación -->
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <i class="bi bi-star-fill text-warning"></i> Calificación*
+                                </label>
+                                <p class="text-muted small mb-3">Selecciona tu calificación del 1 al 5</p>
+                                
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" id="cal1" name="calificacion" value="1" 
+                                           th:checked="${resena.calificacion == 1}" required>
+                                    <label class="btn btn-outline-warning" for="cal1">
+                                        <i class="bi bi-star-fill"></i> 1 - Muy Malo
+                                    </label>
+
+                                    <input type="radio" class="btn-check" id="cal2" name="calificacion" value="2"
+                                           th:checked="${resena.calificacion == 2}">
+                                    <label class="btn btn-outline-warning" for="cal2">
+                                        <i class="bi bi-star-fill"></i> 2 - Malo
+                                    </label>
+
+                                    <input type="radio" class="btn-check" id="cal3" name="calificacion" value="3"
+                                           th:checked="${resena.calificacion == 3}">
+                                    <label class="btn btn-outline-warning" for="cal3">
+                                        <i class="bi bi-star-fill"></i> 3 - Regular
+                                    </label>
+
+                                    <input type="radio" class="btn-check" id="cal4" name="calificacion" value="4"
+                                           th:checked="${resena.calificacion == 4}">
+                                    <label class="btn btn-outline-warning" for="cal4">
+                                        <i class="bi bi-star-fill"></i> 4 - Bueno
+                                    </label>
+
+                                    <input type="radio" class="btn-check" id="cal5" name="calificacion" value="5"
+                                           th:checked="${resena.calificacion == 5}">
+                                    <label class="btn btn-outline-warning" for="cal5">
+                                        <i class="bi bi-star-fill"></i> 5 - Excelente
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Comentario -->
+                            <div class="mb-4">
+                                <label for="comentarioResena" class="form-label">
+                                    <i class="bi bi-chat-dots"></i> Comentario (Opcional)
+                                </label>
+                                <textarea class="form-control" id="comentarioResena" name="comentarioResena" 
+                                          placeholder="Comparte tu experiencia con este producto..." rows="5" 
+                                          maxlength="1000" th:text="${resena.comentarioResena}"></textarea>
+                                <small class="text-muted">Máximo 1000 caracteres</small>
+                            </div>
+
+                            <!-- Información de Fechas -->
+                            <div class="alert alert-info mb-4">
+                                <small>
+                                    <i class="bi bi-calendar3"></i> Creada: <span th:text="${#dates.format(resena.fechaCreacionResena, 'dd/MM/yyyy HH:mm')}"></span><br>
+                                    <i class="bi bi-pencil"></i> Última actualización: <span th:text="${#dates.format(resena.fechaActualizacionResena, 'dd/MM/yyyy HH:mm')}"></span>
+                                </small>
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="d-grid gap-2 d-sm-flex justify-content-end">
+                                <a href="/user/profile" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-circle"></i> Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-5 border-top">
+        <div class="container text-center text-muted">
+            <p class="mb-0">&copy; 2024 RecetasApp. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

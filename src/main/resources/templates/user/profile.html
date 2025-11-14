@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - RecetasApp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/user/home">
+                <i class="bi bi-book-fill"></i> RecetasApp
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user/home">
+                            <i class="bi bi-speedometer2"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/user/profile">
+                            <i class="bi bi-person"></i> Mi Perfil
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Barra de búsqueda -->
+                <form class="d-flex mx-auto" action="/user/buscar" method="get" style="max-width: 400px; width: 100%;">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Buscar productos..." name="q" 
+                               aria-label="Buscar productos" style="border-radius: 20px 0 0 20px;">
+                        <button class="btn btn-outline-light" type="submit" style="border-radius: 0 20px 20px 0; border-left: none;">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+                
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="navbar-text text-white me-3">
+                            <i class="bi bi-person-circle"></i> <span sec:authentication="name"></span>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="bi bi-box-arrow-right"></i> Salir
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container-fluid py-4">
+        <!-- Encabezado del Perfil -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center">
+                                <div class="display-1">
+                                    <i class="bi bi-person-circle text-primary"></i>
+                                </div>
+                            </div>
+                            <div class="col-md-9">
+                                <h2 class="card-title mb-2" th:text="${usuario.nombreUsuario}"></h2>
+                                <p class="text-muted mb-2">
+                                    <i class="bi bi-envelope"></i> <span th:text="${usuario.emailUsuario}"></span>
+                                </p>
+                                <p class="text-muted mb-2" th:if="${usuario.numeroTelefonoUsuario}">
+                                    <i class="bi bi-telephone"></i> <span th:text="${usuario.numeroTelefonoUsuario}"></span>
+                                </p>
+                                <p class="text-muted mb-3" th:if="${usuario.descripcionUsuario}">
+                                    <i class="bi bi-chat-left-quote"></i> <span th:text="${usuario.descripcionUsuario}"></span>
+                                </p>
+                                <a href="/user/profile/edit" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-pencil"></i> Editar Perfil
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertas -->
+        <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle"></i>
+            <span th:if="${param.success[0] == 'profile_updated'}">Perfil actualizado exitosamente</span>
+            <span th:if="${param.success[0] == 'review_created'}">Reseña creada exitosamente</span>
+            <span th:if="${param.success[0] == 'review_updated'}">Reseña actualizada exitosamente</span>
+            <span th:if="${param.success[0] == 'review_deleted'}">Reseña eliminada exitosamente</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-circle"></i> <span th:text="${error}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Sección de Reseñas -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-star-fill"></i> Mis Reseñas
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Sin Reseñas -->
+                        <div th:if="${resenas.isEmpty()}" class="text-center py-5">
+                            <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+                            <p class="text-muted mt-3">Aún no has dejado ninguna reseña</p>
+                            <a href="/user/home" class="btn btn-primary btn-sm">
+                                <i class="bi bi-shop"></i> Ir a Tienda
+                            </a>
+                        </div>
+
+                        <!-- Lista de Reseñas -->
+                        <div th:if="${!resenas.isEmpty()}">
+                            <p class="text-muted mb-3">
+                                <i class="bi bi-info-circle"></i> Total de reseñas: <strong th:text="${totalResenas}"></strong>
+                            </p>
+
+                            <div class="row g-3">
+                                <div th:each="resena : ${resenas}" class="col-md-6">
+                                    <div class="card h-100 border">
+                                        <div class="card-body">
+                                            <!-- Cabecera de Reseña -->
+                                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                                <div>
+                                                    <h6 class="card-title mb-1" th:text="${resena.producto.nombreProducto}"></h6>
+                                                    <div class="d-flex gap-2 align-items-center">
+                                                        <div>
+                                                            <span th:each="i : ${#numbers.sequence(1, 5)}" 
+                                                                  th:class="${i <= resena.calificacion} ? 'text-warning' : 'text-muted'">
+                                                                <i class="bi bi-star-fill"></i>
+                                                            </span>
+                                                        </div>
+                                                        <span class="badge bg-warning text-dark" th:text="${resena.calificacion} + '/5'"></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Comentario -->
+                                            <div th:if="${resena.comentarioResena}" class="mb-3">
+                                                <p class="card-text text-muted small" th:text="${resena.comentarioResena}"></p>
+                                            </div>
+
+                                            <!-- Fechas -->
+                                            <div class="small text-muted mb-3">
+                                                <i class="bi bi-calendar3"></i> 
+                                                <span th:text="${#dates.format(resena.fechaCreacionResena, 'dd/MM/yyyy HH:mm')}"></span>
+                                            </div>
+
+                                            <!-- Acciones -->
+                                            <div class="d-flex gap-2">
+                                                <a th:href="'/user/reviews/edit/' + ${resena.idResena}" 
+                                                   class="btn btn-sm btn-outline-warning">
+                                                    <i class="bi bi-pencil"></i> Editar
+                                                </a>
+                                                <form th:action="'/user/reviews/delete/' + ${resena.idResena}" 
+                                                      method="post" style="display: inline;">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                                            onclick="return confirm('¿Estás seguro de que deseas eliminar esta reseña?')">
+                                                        <i class="bi bi-trash"></i> Eliminar
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light py-4 mt-5 border-top">
+        <div class="container text-center text-muted">
+            <p class="mb-0">&copy; 2024 RecetasApp. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
