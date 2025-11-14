@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${producto.nombreProducto} + ' - RecetasApp'"></title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/user/home">
+                <i class="bi bi-book-fill"></i> RecetasApp
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user/home">
+                            <i class="bi bi-speedometer2"></i> Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/user/productos">
+                            <i class="bi bi-book"></i> Productos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user/profile">
+                            <i class="bi bi-person"></i> Mi Perfil
+                        </a>
+                    </li>
+                </ul>
+                
+                <!-- Barra de búsqueda -->
+                <form class="d-flex mx-auto" action="/user/buscar" method="get" style="max-width: 400px; width: 100%;">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Buscar productos..." name="q" 
+                               aria-label="Buscar productos" style="border-radius: 20px 0 0 20px;">
+                        <button class="btn btn-outline-light" type="submit" style="border-radius: 0 20px 20px 0; border-left: none;">
+                            <i class="bi bi-search"></i>
+                        </button>
+                    </div>
+                </form>
+                
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="navbar-text text-white me-3">
+                            <i class="bi bi-person-circle"></i> <span sec:authentication="name"></span>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="bi bi-box-arrow-right"></i> Salir
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container py-5">
+        <!-- Botón Atrás -->
+        <div class="mb-3">
+            <a href="/user/home" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-arrow-left"></i> Volver a Productos
+            </a>
+        </div>
+
+        <!-- Detalle del Producto -->
+        <div class="row">
+            <!-- Imagen del Producto -->
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm">
+                    <img th:src="'/' + ${producto.rutaImagenProducto}" alt="${producto.nombreProducto}" class="card-img-top rounded" style="height: 400px; object-fit: cover;">
+                </div>
+            </div>
+
+            <!-- Información del Producto -->
+            <div class="col-md-6">
+                <div class="card border-0">
+                    <div class="card-body">
+                        <h1 class="card-title mb-3" th:text="${producto.nombreProducto}"></h1>
+                        
+                        <!-- Calificación -->
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center">
+                                <div>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <span class="ms-2" th:text="${#numbers.formatDecimal(producto.calificacionProducto, 0, 'COMMA', 1, 'POINT')}"></span>
+                                </div>
+                                <span class="ms-3 text-muted" th:text="'(' + ${producto.resenas != null ? producto.resenas.size() : 0} + ' reseñas)'"></span>
+                            </div>
+                        </div>
+
+                        <!-- Precio -->
+                        <div class="mb-3">
+                            <h3 class="text-primary" th:text="'$' + ${#numbers.formatDecimal(producto.precioProducto, 0, 'COMMA', 2, 'POINT')}"></h3>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-4">
+                            <h5 class="text-muted">Descripción</h5>
+                            <p class="card-text" th:text="${producto.descripcionProducto}"></p>
+                        </div>
+
+                        <!-- Ingredientes -->
+                        <div class="mb-4" th:if="${producto.ingredientesProducto != null and producto.ingredientesProducto != ''}">
+                            <h5 class="text-muted">Ingredientes</h5>
+                            <p class="card-text" th:text="${producto.ingredientesProducto}"></p>
+                        </div>
+
+                        <!-- Botones de Acción -->
+                        <div class="d-grid gap-2">
+                            <a th:href="'/user/reviews/new/' + ${producto.idProducto}" class="btn btn-primary btn-lg">
+                                <i class="bi bi-pencil-square"></i> Dejar una Reseña
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reseñas -->
+        <div class="row mt-5">
+            <div class="col-md-12">
+                <h3 class="mb-4">
+                    <i class="bi bi-chat-dots"></i> Reseñas
+                </h3>
+
+                <!-- Lista de Reseñas -->
+                <div th:if="${resenas != null and resenas.size() > 0}" class="row g-3">
+                    <div th:each="resena : ${resenas}" class="col-md-6">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="card-title" th:text="${resena.usuario.nombreUsuario}"></h6>
+                                    <div>
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        <span th:text="${resena.calificacion}"></span>
+                                    </div>
+                                </div>
+                                <p class="card-text text-muted small" th:text="${resena.comentarioResena}"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mensaje si no hay reseñas -->
+                <div th:if="${resenas == null or resenas.size() == 0}" class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Aún no hay reseñas para este producto.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light border-top mt-5 py-4">
+        <div class="container-fluid text-center text-muted">
+            <p>&copy; 2024 RecetasApp. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6" lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Nuevo Producto - RecetasApp</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-danger">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/home">
+                <i class="bi bi-book-fill"></i> RecetasApp - Admin
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/home">
+                            <i class="bi bi-shop"></i> Tienda
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/admin/panel">
+                            <i class="bi bi-speedometer2"></i> Panel de Control
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <span class="navbar-text text-white me-3">
+                            <i class="bi bi-person-circle"></i> <span sec:authentication="name"></span>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">
+                            <i class="bi bi-box-arrow-right"></i> Salir
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <!-- Encabezado -->
+                <div class="mb-4">
+                    <a href="/admin/panel" class="btn btn-outline-danger btn-sm mb-3">
+                        <i class="bi bi-arrow-left"></i> Volver al Panel
+                    </a>
+                    <h1 class="mb-2">
+                        <i class="bi bi-plus-circle text-danger"></i> Crear Nuevo Producto
+                    </h1>
+                    <p class="text-muted">Completa el formulario para agregar un nuevo producto a la tienda</p>
+                </div>
+
+                <!-- Alertas -->
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-circle"></i> <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Formulario -->
+                <div class="card shadow-sm">
+                    <div class="card-body p-4">
+                        <form method="post" action="/admin/recipes/new">
+                            <!-- Nombre del Producto -->
+                            <div class="mb-4">
+                                <label for="nombreProducto" class="form-label">
+                                    <i class="bi bi-pencil"></i> Nombre del Producto*
+                                </label>
+                                <input type="text" class="form-control" id="nombreProducto" name="nombreProducto" required placeholder="Ej: Torta de Chocolate" th:value="${nombreProducto}">
+                                <small class="text-muted">Máximo 100 caracteres</small>
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="mb-4">
+                                <label for="descripcionProducto" class="form-label">
+                                    <i class="bi bi-card-text"></i> Descripción*
+                                </label>
+                                <textarea class="form-control" id="descripcionProducto" name="descripcionProducto" required placeholder="Describe el producto..." rows="4" th:text="${descripcionProducto}"></textarea>
+                                <small class="text-muted">Proporciona una descripción detallada del producto</small>
+                            </div>
+
+                            <!-- Precio -->
+                            <div class="mb-4">
+                                <label for="precioProducto" class="form-label">
+                                    <i class="bi bi-currency-dollar"></i> Precio*
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" id="precioProducto" name="precioProducto" required placeholder="0.00" min="0.01" step="0.01" th:value="${precioProducto}">
+                                </div>
+                                <small class="text-muted">Ingresa el precio en formato decimal (Ej: 25.99)</small>
+                            </div>
+
+                            <!-- Ingredientes -->
+                            <div class="mb-4">
+                                <label for="ingredientesProducto" class="form-label">
+                                    <i class="bi bi-list-check"></i> Ingredientes (Opcional)
+                                </label>
+                                <textarea class="form-control" id="ingredientesProducto" name="ingredientesProducto" placeholder="Lista los ingredientes principales..." rows="4" th:text="${ingredientesProducto}"></textarea>
+                                <small class="text-muted">Separa los ingredientes por comas o en líneas nuevas</small>
+                            </div>
+
+                            <!-- Subida de Imagen -->
+                            <div class="mb-4">
+                                <label for="imagenUpload" class="form-label">
+                                    <i class="bi bi-cloud-upload"></i> Subir Imagen del Producto*
+                                </label>
+                                <div class="input-group">
+                                    <input type="file" class="form-control" id="imagenUpload" accept="image/jpeg,image/png,image/gif,image/webp" required>
+                                    <button class="btn btn-outline-primary" type="button" id="btnSubirImagen">
+                                        <i class="bi bi-upload"></i> Subir
+                                    </button>
+                                </div>
+                                <small class="text-muted">Formatos: JPG, PNG, GIF, WEBP. Máximo 5MB</small>
+                                <div id="uploadProgress" class="mt-2" style="display: none;">
+                                    <div class="progress">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Campo oculto con la ruta de la imagen -->
+                            <input type="hidden" id="rutaImagenProducto" name="rutaImagenProducto" required>
+
+                            <!-- Preview de Imagen -->
+                            <div class="mb-4">
+                                <label class="form-label">Vista Previa de Imagen</label>
+                                <div class="card border-0 bg-light p-3 text-center" id="imagePreview">
+                                    <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                                    <p class="text-muted small mt-2">La imagen aparecerá aquí después de subirla</p>
+                                </div>
+                            </div>
+
+                            <!-- Botones -->
+                            <div class="d-grid gap-2 d-sm-flex justify-content-end">
+                                <a href="/admin/panel" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Cancelar
+                                </a>
+                                <button type="submit" class="btn btn-danger">
+                                    <i class="bi bi-check-circle"></i> Crear Producto
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Información -->
+                <div class="alert alert-info mt-4">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Nota:</strong> Todos los campos marcados con * son obligatorios. Asegúrate de que la URL de la imagen sea válida y accesible.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-light border-top mt-5 py-4">
+        <div class="container-fluid text-center text-muted">
+            <p>&copy; 2024 RecetasApp. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Manejador para subir imagen
+        document.getElementById('btnSubirImagen').addEventListener('click', async function() {
+            const fileInput = document.getElementById('imagenUpload');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Por favor selecciona una imagen');
+                return;
+            }
+            
+            // Mostrar progreso
+            document.getElementById('uploadProgress').style.display = 'block';
+            this.disabled = true;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/upload/imagen', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Guardar la ruta en el campo oculto
+                    document.getElementById('rutaImagenProducto').value = data.filename;
+                    
+                    // Mostrar preview
+                    const imagePreview = document.getElementById('imagePreview');
+                    imagePreview.innerHTML = `<img src="${data.url}" alt="Preview" style="max-height: 250px; object-fit: cover;" class="rounded">`;
+                    
+                    // Mostrar alerta de éxito
+                    showAlert('success', '✓ Imagen subida exitosamente');
+                } else {
+                    showAlert('danger', '✗ Error: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('danger', '✗ Error al subir la imagen');
+            } finally {
+                document.getElementById('uploadProgress').style.display = 'none';
+                this.disabled = false;
+            }
+        });
+        
+        // Función auxiliar para mostrar alertas
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.role = 'alert';
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const form = document.querySelector('.card-body');
+            form.insertBefore(alertDiv, form.firstChild);
+            
+            // Auto-descartar después de 5 segundos
+            setTimeout(() => alertDiv.remove(), 5000);
+        }
+        
+        // Permitir arrastrar y soltar archivos
+        const dropZone = document.getElementById('imagePreview');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.style.backgroundColor = '#e7f3ff';
+            });
+        });
+        
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZone.style.backgroundColor = '';
+            });
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            document.getElementById('imagenUpload').files = files;
+            document.getElementById('btnSubirImagen').click();
+        });
+    </script>
+</body>
+</html>
