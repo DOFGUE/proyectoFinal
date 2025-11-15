@@ -64,8 +64,8 @@
             <div class="col-md-8">
                 <!-- Encabezado -->
                 <div class="mb-4">
-                    <a href="/user/profile" class="btn btn-outline-primary btn-sm mb-3">
-                        <i class="bi bi-arrow-left"></i> Volver al Perfil
+                    <a th:href="'/user/producto/' + ${producto.idProducto}" class="btn btn-outline-primary btn-sm mb-3">
+                        <i class="bi bi-arrow-left"></i> Volver al Producto
                     </a>
                     <h1 class="mb-2">
                         <i class="bi bi-pencil text-warning"></i> Editar Reseña
@@ -100,6 +100,11 @@
                 <!-- Alertas -->
                 <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="bi bi-exclamation-circle"></i> <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div th:if="${param.info}" class="alert alert-info alert-dismissible fade show" role="alert">
+                    <i class="bi bi-info-circle"></i> Ya tenías una reseña en este producto, se ha abierto automáticamente para que la edites.
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
 
@@ -169,7 +174,7 @@
 
                             <!-- Botones -->
                             <div class="d-grid gap-2 d-sm-flex justify-content-end">
-                                <a href="/user/profile" class="btn btn-secondary">
+                                <a th:href="'/user/producto/' + ${producto.idProducto}" class="btn btn-secondary">
                                     <i class="bi bi-x-circle"></i> Cancelar
                                 </a>
                                 <button type="submit" class="btn btn-primary">

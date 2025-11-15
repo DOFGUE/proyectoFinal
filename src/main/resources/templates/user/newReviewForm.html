@@ -143,6 +143,18 @@
                                 </div>
                             </div>
 
+                            <script>
+                                // Si ya existe una calificación, preseleccionarla
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const calificacionElement = document.querySelector('[data-calificacion]');
+                                    if (calificacionElement) {
+                                        const calificacion = calificacionElement.getAttribute('data-calificacion');
+                                        document.getElementById('cal' + calificacion).checked = true;
+                                    }
+                                });
+                            </script>
+                            <div data-calificacion="1" style="display: none;"></div>
+
                             <!-- Comentario -->
                             <div class="mb-4">
                                 <label for="comentarioResena" class="form-label">

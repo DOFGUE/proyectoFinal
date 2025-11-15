@@ -59,6 +59,11 @@ public class resenaService {
 		return u.getResenas() != null ? u.getResenas() : List.of();
 	}
 	
+	// Obtener reseña existente de un usuario para un producto específico
+	public Optional<resena> obtenerResenaUsuarioProducto(Long idUsuario, Long idProducto) {
+		return resenaRepo.findByUsuarioAndProducto(idUsuario, idProducto);
+	}
+	
 	// Crear nueva reseña
 	public resena crearResena(Long idUsuario, Long idProducto, Integer calificacion, String comentario) {
 		// Validar calificación
