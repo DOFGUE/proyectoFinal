@@ -8,6 +8,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import edu.com.co.Proyecto.Final.Model.producto;
 import edu.com.co.Proyecto.Final.Service.productoService;
@@ -20,6 +25,7 @@ import edu.com.co.Proyecto.Final.Service.resenaService;
  */
 @Controller
 @RequestMapping("/admin")
+@Tag(name = "Administrador", description = "API para gestión administrativa - Panel de control, productos y reseñas")
 public class AdminController {
 	
 	@Autowired
@@ -34,6 +40,8 @@ public class AdminController {
 	 * Muestra información general del sistema y gestión de productos
 	 */
 	@GetMapping("/panel")
+	@Operation(summary = "Panel de control administrativo", description = "Muestra el panel principal del administrador con estadísticas y gestión de productos")
+	@ApiResponse(responseCode = "200", description = "Panel cargado exitosamente")
 	public String controlPanel(Model model) {
 		try {
 			// Obtener estadísticas del sistema
@@ -59,6 +67,8 @@ public class AdminController {
 	 * Muestra lista de productos disponibles
 	 */
 	@GetMapping("/home")
+	@Operation(summary = "Página de inicio para administrador", description = "Muestra el inicio del administrador con la lista de todos los productos disponibles")
+	@ApiResponse(responseCode = "200", description = "Página cargada exitosamente")
 	public String adminHome(Model model) {
 		try {
 			// Obtener todos los productos para mostrar
@@ -75,7 +85,12 @@ public class AdminController {
 	 * Ruta: GET /admin/producto/{id}
 	 */
 	@GetMapping("/producto/{id}")
-	public String verProductoDetalle(@PathVariable Long id, Model model) {
+	@Operation(summary = "Detalle de producto para administrador", description = "Muestra los detalles completos de un producto incluyendo sus reseñas")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Detalle obtenido exitosamente"),
+		@ApiResponse(responseCode = "404", description = "Producto no encontrado")
+	})
+	public String verProductoDetalle(@PathVariable @Parameter(description = "ID del producto") Long id, Model model) {
 		try {
 			var productoOpt = productoService.obtenerProductoPorId(id);
 			
@@ -100,6 +115,8 @@ public class AdminController {
 	 * Ruta: GET /admin/recipes/new
 	 */
 	@GetMapping("/recipes/new")
+	@Operation(summary = "Formulario de creación de producto", description = "Muestra el formulario para crear un nuevo producto/receta")
+	@ApiResponse(responseCode = "200", description = "Formulario cargado exitosamente")
 	public String newRecipeForm() {
 		return "admin/newRecipeForm";
 	}
@@ -116,12 +133,17 @@ public class AdminController {
 	 * @return Redirige al panel de control
 	 */
 	@PostMapping("/recipes/new")
+	@Operation(summary = "Crear nuevo producto", description = "Crea un nuevo producto/receta en el sistema")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "302", description = "Redirección después de creación exitosa"),
+		@ApiResponse(responseCode = "400", description = "Error de validación en los datos del producto")
+	})
 	public String createRecipe(
-			@RequestParam String nombreProducto,
-			@RequestParam Double precioProducto,
-			@RequestParam String rutaImagenProducto,
-			@RequestParam String descripcionProducto,
-			@RequestParam(required = false) String ingredientesProducto,
+			@RequestParam @Parameter(description = "Nombre del producto") String nombreProducto,
+			@RequestParam @Parameter(description = "Precio del producto") Double precioProducto,
+			@RequestParam @Parameter(description = "Ruta de la imagen del producto") String rutaImagenProducto,
+			@RequestParam @Parameter(description = "Descripción del producto") String descripcionProducto,
+			@RequestParam(required = false) @Parameter(description = "Ingredientes del producto") String ingredientesProducto,
 			Model model) {
 		
 		try {
@@ -153,7 +175,12 @@ public class AdminController {
 	 * Ruta: GET /admin/recipes/update/{id}
 	 */
 	@GetMapping("/recipes/update/{id}")
-	public String updateRecipeForm(@PathVariable Long id, Model model) {
+	@Operation(summary = "Formulario de edición de producto", description = "Muestra el formulario para editar un producto existente")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Formulario cargado exitosamente"),
+		@ApiResponse(responseCode = "404", description = "Producto no encontrado")
+	})
+	public String updateRecipeForm(@PathVariable @Parameter(description = "ID del producto") Long id, Model model) {
 		try {
 			var productoOpt = productoService.obtenerProductoPorId(id);
 			
@@ -174,13 +201,19 @@ public class AdminController {
 	 * Ruta: POST /admin/recipes/update/{id}
 	 */
 	@PostMapping("/recipes/update/{id}")
+	@Operation(summary = "Actualizar producto", description = "Actualiza la información de un producto existente")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "302", description = "Redirección después de actualización exitosa"),
+		@ApiResponse(responseCode = "400", description = "Error de validación en los datos"),
+		@ApiResponse(responseCode = "404", description = "Producto no encontrado")
+	})
 	public String updateRecipe(
-			@PathVariable Long id,
-			@RequestParam String nombreProducto,
-			@RequestParam Double precioProducto,
-			@RequestParam String rutaImagenProducto,
-			@RequestParam String descripcionProducto,
-			@RequestParam(required = false) String ingredientesProducto,
+			@PathVariable @Parameter(description = "ID del producto") Long id,
+			@RequestParam @Parameter(description = "Nombre del producto") String nombreProducto,
+			@RequestParam @Parameter(description = "Precio del producto") Double precioProducto,
+			@RequestParam @Parameter(description = "Ruta de la imagen del producto") String rutaImagenProducto,
+			@RequestParam @Parameter(description = "Descripción del producto") String descripcionProducto,
+			@RequestParam(required = false) @Parameter(description = "Ingredientes del producto") String ingredientesProducto,
 			Model model) {
 		
 		try {
@@ -211,7 +244,12 @@ public class AdminController {
 	 * Ruta: POST /admin/recipes/delete/{id}
 	 */
 	@PostMapping("/recipes/delete/{id}")
-	public String deleteRecipe(@PathVariable Long id) {
+	@Operation(summary = "Eliminar producto", description = "Elimina un producto del sistema")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "302", description = "Redirección después de eliminación exitosa"),
+		@ApiResponse(responseCode = "404", description = "Producto no encontrado")
+	})
+	public String deleteRecipe(@PathVariable @Parameter(description = "ID del producto") Long id) {
 		try {
 			// Eliminar usando el servicio
 			productoService.eliminarProducto(id);
@@ -229,7 +267,12 @@ public class AdminController {
 	 * Ruta: GET /admin/recipes/{id}
 	 */
 	@GetMapping("/recipes/{id}")
-	public String viewRecipe(@PathVariable Long id, Model model) {
+	@Operation(summary = "Ver detalle de producto", description = "Muestra los detalles completos de un producto incluyendo todas sus reseñas")
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Detalle obtenido exitosamente"),
+		@ApiResponse(responseCode = "404", description = "Producto no encontrado")
+	})
+	public String viewRecipe(@PathVariable @Parameter(description = "ID del producto") Long id, Model model) {
 		try {
 			var productoOpt = productoService.obtenerProductoPorId(id);
 			

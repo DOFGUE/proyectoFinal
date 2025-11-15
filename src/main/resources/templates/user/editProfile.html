@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Perfil</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-6">
+                <div class="card shadow-lg">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="mb-0">✏️ Editar Perfil</h2>
+                        <p class="mb-0 small">Actualiza tu información personal</p>
+                    </div>
+
+                    <div class="card-body">
+                        <!-- Mensajes de error/éxito -->
+                        <div th:if="${param.error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Error:</strong> <span th:text="${param.error}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+
+                        <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong>Error:</strong> <span th:text="${error}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+
+                        <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                            <strong>¡Éxito!</strong> Tu perfil ha sido actualizado correctamente.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+
+                        <!-- Información del usuario actual -->
+                        <div class="alert alert-info" role="alert">
+                            <strong>Nota:</strong> Algunos campos no pueden ser modificados. Contacta al administrador si necesitas cambiar tu nombre de usuario.
+                        </div>
+
+                        <!-- Información de usuario no editable -->
+                        <div class="row mb-4" th:if="${usuario}">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">Nombre de Usuario</h6>
+                                        <p class="card-text" th:text="${usuario.nombreUsuario}"></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6 class="card-subtitle mb-2 text-muted">ID Usuario</h6>
+                                        <p class="card-text" th:text="${usuario.idUsuario}"></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulario de edición -->
+                        <form method="POST" action="/user/profile/edit" th:if="${usuario}">
+                            <!-- Email -->
+                            <div class="mb-3">
+                                <label for="emailUsuario" class="form-label">📧 Correo Electrónico *</label>
+                                <input 
+                                    type="email" 
+                                    id="emailUsuario" 
+                                    name="emailUsuario" 
+                                    class="form-control"
+                                    th:value="${usuario.emailUsuario}" 
+                                    required 
+                                    placeholder="tu.email@ejemplo.com">
+                                <small class="form-text text-muted">Usaremos este correo para contactarte si es necesario</small>
+                            </div>
+
+                            <!-- Teléfono -->
+                            <div class="mb-3">
+                                <label for="numeroTelefonoUsuario" class="form-label">📱 Número de Teléfono *</label>
+                                <input 
+                                    type="tel" 
+                                    id="numeroTelefonoUsuario" 
+                                    name="numeroTelefonoUsuario" 
+                                    class="form-control"
+                                    th:value="${usuario.numeroTelefonoUsuario}" 
+                                    required 
+                                    placeholder="Ej: 3001234567"
+                                    pattern="[0-9]{10,}">
+                                <small class="form-text text-muted">Ingresa un número válido de al menos 10 dígitos</small>
+                            </div>
+
+                            <!-- Descripción/Bio -->
+                            <div class="mb-3">
+                                <label for="descripcionUsuario" class="form-label">📝 Descripción / Bio</label>
+                                <textarea 
+                                    id="descripcionUsuario" 
+                                    name="descripcionUsuario" 
+                                    class="form-control"
+                                    placeholder="Cuéntanos sobre ti... (opcional)"
+                                    maxlength="500" 
+                                    rows="4" th:text="${usuario.descripcionUsuario != null ? usuario.descripcionUsuario : ''}"></textarea>
+                                <small class="form-text text-muted">Máximo 500 caracteres</small>
+                            </div>
+
+                            <!-- Acciones -->
+                            <div class="d-flex gap-2 justify-content-end mt-4">
+                                <a href="/user/profile" class="btn btn-secondary">⬅️ Cancelar</a>
+                                <button type="submit" class="btn btn-primary">💾 Guardar Cambios</button>
+                            </div>
+                        </form>
+
+                        <!-- Mensaje si no hay usuario -->
+                        <div th:if="!${usuario}" class="alert alert-danger" role="alert">
+                            <strong>Error:</strong> No se pudo cargar la información del usuario. Por favor, intenta más tarde.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Validación en cliente
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const email = document.getElementById('emailUsuario').value;
+                const telefono = document.getElementById('numeroTelefonoUsuario').value;
+
+                // Validar email
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    e.preventDefault();
+                    alert('Por favor, ingresa un correo electrónico válido');
+                    return false;
+                }
+
+                // Validar teléfono (solo números, al menos 10 dígitos)
+                if (!/^\d{10,}$/.test(telefono)) {
+                    e.preventDefault();
+                    alert('El teléfono debe contener al menos 10 dígitos');
+                    return false;
+                }
+
+                return true;
+            });
+        }
+    </script>
+</body>
+</html>

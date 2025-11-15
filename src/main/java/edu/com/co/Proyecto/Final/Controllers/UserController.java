@@ -9,6 +9,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import java.util.HashMap;
+import java.util.Map;
 
 import edu.com.co.Proyecto.Final.Model.usuario;
 import edu.com.co.Proyecto.Final.Service.usuarioService;
@@ -191,10 +196,11 @@ public class UserController {
 	
 	/**
 	 * Mostrar formulario para crear nueva reseña
+	 * Si el usuario ya tiene una reseña, redirige al formulario de edición
 	 * Ruta: GET /user/reviews/new/{productoId}
 	 */
 	@GetMapping("/reviews/new/{productoId}")
-	public String newReviewForm(@PathVariable Long productoId, Model model) {
+	public String newReviewForm(@PathVariable Long productoId, Model model, Authentication authentication) {
 		try {
 			var productoOpt = productoService.obtenerProductoPorId(productoId);
 			
@@ -202,7 +208,22 @@ public class UserController {
 				return "redirect:/user/home?error=product_not_found";
 			}
 			
+			usuario usuarioActual = obtenerUsuarioAutenticado(authentication);
+			
+			if (usuarioActual == null) {
+				return "redirect:/login";
+			}
+			
+			// Verificar si el usuario ya tiene una reseña en este producto
+			var resenaExistente = resenaService.obtenerResenaUsuarioProducto(usuarioActual.getIdUsuario(), productoId);
+			
+			if (resenaExistente.isPresent()) {
+				// Si ya existe reseña, redirigir al formulario de edición
+				return "redirect:/user/reviews/edit/" + resenaExistente.get().getIdResena();
+			}
+			
 			model.addAttribute("producto", productoOpt.get());
+			model.addAttribute("modo", "crear");
 			return "user/newReviewForm";
 			
 		} catch (Exception e) {
@@ -234,15 +255,22 @@ public class UserController {
 				return "redirect:/user/home?error=product_not_found";
 			}
 			
+			// Verificar si ya existe una reseña del usuario para este producto
+			var resenaExistente = resenaService.obtenerResenaUsuarioProducto(usuarioActual.getIdUsuario(), productoId);
+			if (resenaExistente.isPresent()) {
+				// Redirigir al formulario de edición
+				return "redirect:/user/reviews/edit/" + resenaExistente.get().getIdResena() + "?info=review_exists";
+			}
+			
 			// Crear reseña usando el servicio (valida todo)
 			resenaService.crearResena(usuarioActual.getIdUsuario(), productoId, calificacion, comentarioResena);
 			
 			System.out.println("✓ Reseña creada exitosamente para producto " + productoId);
-			return "redirect:/user/profile?success=review_created";
+			return "redirect:/user/producto/" + productoId + "?success=review_created";
 			
 		} catch (IllegalArgumentException e) {
 			System.out.println("✗ Error de validación al crear reseña: " + e.getMessage());
-			return "redirect:/user/reviews/new/" + productoId + "?error=validation_failed";
+			return "redirect:/user/reviews/new/" + productoId + "?error=" + e.getMessage();
 		} catch (Exception e) {
 			System.out.println("✗ Error al crear reseña: " + e.getMessage());
 			e.printStackTrace();
@@ -314,10 +342,12 @@ public class UserController {
 				return "redirect:/user/profile?error=unauthorized";
 			}
 			
+			Long productoId = resenaOpt.get().getProducto().getIdProducto();
+			
 			// Actualizar reseña usando el servicio
 			resenaService.actualizarResena(resenaId, calificacion, comentarioResena);
 			
-			return "redirect:/user/profile?success=review_updated";
+			return "redirect:/user/producto/" + productoId + "?success=review_updated";
 			
 		} catch (IllegalArgumentException e) {
 			model.addAttribute("error", e.getMessage());
@@ -325,6 +355,7 @@ public class UserController {
 		} catch (Exception e) {
 			model.addAttribute("error", "Error al actualizar la reseña: " + e.getMessage());
 			return "redirect:/user/reviews/edit/" + resenaId + "?error=update_failed";
+			
 		}
 	}
 	
@@ -423,5 +454,53 @@ public class UserController {
 		}
 		
 		return "user/buscar";
+	}
+	
+	/**
+	 * Generar link de WhatsApp para ordenar un producto
+	 * Ruta: GET /user/api/whatsapp-link/{productoId}
+	 * Retorna un JSON con el link de WhatsApp
+	 * Esta lógica se mueve del frontend al backend para mayor seguridad
+	 */
+	@GetMapping("/api/whatsapp-link/{productoId}")
+	@ResponseBody
+	public ResponseEntity<?> generarLinkWhatsApp(@PathVariable Long productoId) {
+		try {
+			var productoOpt = productoService.obtenerProductoPorId(productoId);
+			
+			if (productoOpt.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND)
+					.body(Map.of("error", "Producto no encontrado"));
+			}
+			
+			var producto = productoOpt.get();
+			
+			// Número de WhatsApp centralizado (puede venir de configuración o BD)
+			String numeroWhatsApp = "573160423358";
+			
+			// Construir mensaje
+			String nombreProducto = producto.getNombreProducto();
+			String precioProducto = String.format("%.2f", producto.getPrecioProducto());
+			String mensaje = String.format("Hola! Me gustaría ordenar: %s. Precio: $%s", 
+				nombreProducto, precioProducto);
+			
+			// Generar URL de WhatsApp
+			String urlWhatsApp = String.format("https://wa.me/%s?text=%s", 
+				numeroWhatsApp, 
+				java.net.URLEncoder.encode(mensaje, "UTF-8"));
+			
+			// Retornar JSON con el link
+			Map<String, String> response = new HashMap<>();
+			response.put("whatsappLink", urlWhatsApp);
+			response.put("mensaje", mensaje);
+			response.put("producto", nombreProducto);
+			response.put("precio", precioProducto);
+			
+			return ResponseEntity.ok(response);
+			
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+				.body(Map.of("error", "Error al generar el link: " + e.getMessage()));
+		}
 	}
 }
