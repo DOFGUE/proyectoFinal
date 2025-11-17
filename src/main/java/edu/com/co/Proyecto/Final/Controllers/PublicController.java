@@ -1,6 +1,7 @@
 package edu.com.co.Proyecto.Final.Controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +25,20 @@ public class PublicController {
 	 * Ruta: GET /home
 	 */
 	@GetMapping("/home")
-	public String home() {
+	public String home(Authentication authentication) {
+		// Si el usuario ya está autenticado, redirigirlo a su dashboard
+		if (authentication != null && authentication.isAuthenticated() 
+			&& !authentication.getName().equals("anonymousUser")) {
+			
+			// Verificar el rol y redirigir al home correspondiente
+			if (authentication.getAuthorities().stream()
+				.anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+				return "redirect:/admin/home";
+			} else {
+				return "redirect:/user/home";
+			}
+		}
+		
 		return "home";
 	}
 	
@@ -33,7 +47,19 @@ public class PublicController {
 	 * Ruta: GET /login
 	 */
 	@GetMapping("/login")
-	public String login() {
+	public String login(Authentication authentication) {
+		// Si el usuario ya está autenticado, redirigirlo a su dashboard
+		if (authentication != null && authentication.isAuthenticated() 
+			&& !authentication.getName().equals("anonymousUser")) {
+			
+			if (authentication.getAuthorities().stream()
+				.anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+				return "redirect:/admin/home";
+			} else {
+				return "redirect:/user/home";
+			}
+		}
+		
 		return "login";
 	}
 	
@@ -42,7 +68,19 @@ public class PublicController {
 	 * Ruta: GET /signup
 	 */
 	@GetMapping("/signup")
-	public String signup() {
+	public String signup(Authentication authentication) {
+		// Si el usuario ya está autenticado, redirigirlo a su dashboard
+		if (authentication != null && authentication.isAuthenticated() 
+			&& !authentication.getName().equals("anonymousUser")) {
+			
+			if (authentication.getAuthorities().stream()
+				.anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+				return "redirect:/admin/home";
+			} else {
+				return "redirect:/user/home";
+			}
+		}
+		
 		return "signup";
 	}
 	

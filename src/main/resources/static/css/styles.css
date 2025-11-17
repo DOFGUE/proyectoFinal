@@ -1,0 +1,36 @@
+@charset "UTF-8";
+
+
+.navbar {
+    background-color: rgb(213, 188, 162) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.footer{
+    background-color: rgb(213, 188, 162) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+.cuerpo{
+	    background-color: rgb(240, 234, 226) !important;
+}
+.btn{
+	    background-color: rgb(213, 188, 162) !important;
+	    border-color: rgb(213, 188, 162) !important;
+	    color: white !important;
+	    padding: 10px 20px !important;
+	    text-align: center !important;    
+}
+.btn:hover{
+	    background-color: rgb(255, 255, 255) !important;
+        border-color: rgb(180, 150, 120) !important;
+        color: rgb(213, 188, 162) !important;
+}
+.iconFooter{
+	    color: rgb(213, 188, 162) !important;
+	    font-size: 3rem;
+}
