@@ -8,5 +8,7 @@ import edu.com.co.Proyecto.Final.Model.usuario;
 
 public interface usuarioRepository extends JpaRepository<usuario, Long> {
 	Optional<usuario> findByNombreUsuario(String nombreUsuario);
+	// Find user by email for uniqueness validation on profile updates
+	Optional<usuario> findByEmailUsuario(String emailUsuario);
 
 }

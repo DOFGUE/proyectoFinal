@@ -19,18 +19,29 @@
 	    background-color: rgb(240, 234, 226) !important;
 }
 .btn{
-	    background-color: rgb(213, 188, 162) !important;
-	    border-color: rgb(213, 188, 162) !important;
+	    background-color: #A67B5B !important;
+	    border-color: #A67B5B !important;
 	    color: white !important;
 	    padding: 10px 20px !important;
 	    text-align: center !important;    
+
 }
 .btn:hover{
 	    background-color: rgb(255, 255, 255) !important;
-        border-color: rgb(180, 150, 120) !important;
-        color: rgb(213, 188, 162) !important;
+        border-color: #A67B5B !important;
+        color: #A67B5B !important;
 }
 .iconFooter{
 	    color: rgb(213, 188, 162) !important;
 	    font-size: 3rem;
+}
+.precio{
+		background-color: #A67B5B !important;
+	    border-color: #A67B5B !important;
+	    color: white !important;
+	    padding: 10px 20px !important;  
+}
+.iconFooter2{
+	    color: rgb(213, 188, 162) !important;
+
 }

@@ -156,6 +156,7 @@ public class UserController {
 	/**
 	 * Procesar actualización de perfil
 	 * Ruta: POST /user/profile/edit
+	 * Todas las validaciones se ejecutan en el servicio
 	 */
 	@PostMapping("/profile/edit")
 	public String updateProfile(
@@ -172,22 +173,29 @@ public class UserController {
 				return "redirect:/login";
 			}
 			
-			// Crear objeto con los datos actualizados
-			usuario usuarioActualizado = new usuario();
-			usuarioActualizado.setEmailUsuario(emailUsuario);
-			usuarioActualizado.setNumeroTelefonoUsuario(numeroTelefonoUsuario);
-			usuarioActualizado.setDescripcionUsuario(descripcionUsuario);
+			// Actualizar perfil usando servicio con validaciones completas
+			usuarioService.actualizarPerfilUsuario(
+				usuarioActual.getIdUsuario(), 
+				emailUsuario, 
+				numeroTelefonoUsuario, 
+				descripcionUsuario
+			);
 			
-			// Actualizar usando el servicio
-			usuarioService.actualizarUsuario(usuarioActual.getIdUsuario(), usuarioActualizado);
-			
+			System.out.println("✓ Perfil actualizado exitosamente para usuario: " + usuarioActual.getNombreUsuario());
 			return "redirect:/user/profile?success=profile_updated";
 			
 		} catch (IllegalArgumentException e) {
+			// Errores de validación del servicio
+			System.out.println("✗ Error de validación: " + e.getMessage());
 			model.addAttribute("error", e.getMessage());
+			model.addAttribute("usuario", obtenerUsuarioAutenticado(authentication));
 			return "user/editProfile";
 		} catch (Exception e) {
-			model.addAttribute("error", "Error al actualizar el perfil: " + e.getMessage());
+			// Errores inesperados
+			System.out.println("✗ Error al actualizar perfil: " + e.getMessage());
+			e.printStackTrace();
+			model.addAttribute("error", "Error al actualizar el perfil. Por favor, intenta nuevamente.");
+			model.addAttribute("usuario", obtenerUsuarioAutenticado(authentication));
 			return "user/editProfile";
 		}
 	}
