@@ -148,6 +148,55 @@ public class usuarioService {
 		return usuarioRepo.save(usuario);
 	}
 	
+	/**
+	 * Actualizar perfil de usuario con validaciones completas
+	 * Valida email, teléfono y descripción según reglas de negocio
+	 */
+	public usuario actualizarPerfilUsuario(Long idUsuario, String email, Long telefono, String descripcion) {
+		// Validar que el usuario existe
+		usuario usuario = usuarioRepo.findById(idUsuario)
+			.orElseThrow(() -> new IllegalArgumentException("El usuario no existe"));
+		
+		// Validar email obligatorio
+		if (email == null || email.trim().isEmpty()) {
+			throw new IllegalArgumentException("El correo electrónico es obligatorio");
+		}
+		
+		// Validar formato de email
+		if (!validarFormatoEmail(email.trim())) {
+			throw new IllegalArgumentException("El formato del correo electrónico no es válido");
+		}
+		
+		// Validar que el email no esté en uso por otro usuario
+		Optional<usuario> usuarioConEmail = usuarioRepo.findByEmailUsuario(email.trim());
+		if (usuarioConEmail.isPresent() && !usuarioConEmail.get().getIdUsuario().equals(idUsuario)) {
+			throw new IllegalArgumentException("El correo electrónico ya está en uso por otro usuario");
+		}
+		
+		// Validar teléfono obligatorio
+		if (telefono == null) {
+			throw new IllegalArgumentException("El número de teléfono es obligatorio");
+		}
+		
+		// Validar que el teléfono tenga al menos 10 dígitos
+		String telefonoStr = String.valueOf(telefono);
+		if (telefonoStr.length() < 10) {
+			throw new IllegalArgumentException("El teléfono debe contener al menos 10 dígitos");
+		}
+		
+		// Validar descripción (máximo 500 caracteres)
+		if (descripcion != null && descripcion.length() > 500) {
+			throw new IllegalArgumentException("La descripción no puede tener más de 500 caracteres");
+		}
+		
+		// Actualizar datos
+		usuario.setEmailUsuario(email.trim());
+		usuario.setNumeroTelefonoUsuario(telefono);
+		usuario.setDescripcionUsuario(descripcion != null ? descripcion.trim() : "");
+		
+		return usuarioRepo.save(usuario);
+	}
+	
 	// Cambiar contraseña
 	public void cambiarContrasena(Long idUsuario, String contrasenaNueva) {
 		Optional<usuario> usuarioOpt = usuarioRepo.findById(idUsuario);
