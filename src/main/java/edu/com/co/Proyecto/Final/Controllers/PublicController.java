@@ -1,5 +1,12 @@
 package edu.com.co.Proyecto.Final.Controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -15,6 +22,7 @@ import edu.com.co.Proyecto.Final.Service.usuarioService;
  * Gestiona acceso a páginas sin autenticación
  */
 @Controller
+@Tag(name = "Público", description = "Endpoints públicos - Acceso sin autenticación (login, registro, home)")
 public class PublicController {
 	
 	@Autowired
@@ -25,7 +33,15 @@ public class PublicController {
 	 * Ruta: GET /home
 	 */
 	@GetMapping("/home")
-	public String home(Authentication authentication) {
+	@Operation(
+		summary = "Página de inicio pública",
+		description = "Muestra la página de inicio. Si el usuario está autenticado, lo redirige a su dashboard correspondiente según su rol"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Página de inicio mostrada"),
+		@ApiResponse(responseCode = "302", description = "Usuario autenticado - Redirige a /admin/home o /user/home")
+	})
+	public String home(@Parameter(hidden = true) Authentication authentication) {
 		// Si el usuario ya está autenticado, redirigirlo a su dashboard
 		if (authentication != null && authentication.isAuthenticated() 
 			&& !authentication.getName().equals("anonymousUser")) {
@@ -47,7 +63,15 @@ public class PublicController {
 	 * Ruta: GET /login
 	 */
 	@GetMapping("/login")
-	public String login(Authentication authentication) {
+	@Operation(
+		summary = "Página de inicio de sesión",
+		description = "Muestra el formulario de login. Si el usuario ya está autenticado, lo redirige a su dashboard"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Formulario de login mostrado"),
+		@ApiResponse(responseCode = "302", description = "Usuario ya autenticado - Redirige a su dashboard")
+	})
+	public String login(@Parameter(hidden = true) Authentication authentication) {
 		// Si el usuario ya está autenticado, redirigirlo a su dashboard
 		if (authentication != null && authentication.isAuthenticated() 
 			&& !authentication.getName().equals("anonymousUser")) {
@@ -68,7 +92,15 @@ public class PublicController {
 	 * Ruta: GET /signup
 	 */
 	@GetMapping("/signup")
-	public String signup(Authentication authentication) {
+	@Operation(
+		summary = "Página de registro",
+		description = "Muestra el formulario de registro de nuevos usuarios. Si el usuario ya está autenticado, lo redirige a su dashboard"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Formulario de registro mostrado"),
+		@ApiResponse(responseCode = "302", description = "Usuario ya autenticado - Redirige a su dashboard")
+	})
+	public String signup(@Parameter(hidden = true) Authentication authentication) {
 		// Si el usuario ya está autenticado, redirigirlo a su dashboard
 		if (authentication != null && authentication.isAuthenticated() 
 			&& !authentication.getName().equals("anonymousUser")) {
@@ -89,12 +121,33 @@ public class PublicController {
 	 * Ruta: POST /signup
 	 */
 	@PostMapping("/signup")
+	@Operation(
+		summary = "Registrar nuevo usuario",
+		description = "Procesa el registro de un nuevo usuario. Valida username único, formato de email, coincidencia de contraseñas y teléfono. Asigna automáticamente rol USER"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(
+			responseCode = "302",
+			description = "Usuario registrado exitosamente - Redirige a /login"
+		),
+		@ApiResponse(
+			responseCode = "200",
+			description = "Error de validación - Muestra formulario con errores",
+			content = @Content(mediaType = "text/html")
+		)
+	})
 	public String registrarUsuario(
+			@Parameter(description = "Nombre de usuario único", required = true, example = "juanperez")
 			@RequestParam String nombreUsuario,
+			@Parameter(description = "Email válido del usuario", required = true, example = "juan@example.com")
 			@RequestParam String emailUsuario,
+			@Parameter(description = "Contraseña del usuario", required = true, example = "password123")
 			@RequestParam String contrasenaUsuario,
+			@Parameter(description = "Confirmación de contraseña (debe coincidir)", required = true, example = "password123")
 			@RequestParam String confirmPassword,
+			@Parameter(description = "Número de teléfono (mínimo 10 dígitos)", required = true, example = "3001234567")
 			@RequestParam Long numeroTelefonoUsuario,
+			@Parameter(description = "Descripción opcional del usuario", required = false, example = "Me encanta cocinar")
 			@RequestParam(required = false) String descripcionUsuario,
 			Model model) {
 		
@@ -123,6 +176,11 @@ public class PublicController {
 	 * Ruta: GET /
 	 */
 	@GetMapping("/")
+	@Operation(
+		summary = "Ruta raíz",
+		description = "Redirige automáticamente a la página de inicio /home"
+	)
+	@ApiResponse(responseCode = "302", description = "Redirige a /home")
 	public String index() {
 		return "redirect:/home";
 	}

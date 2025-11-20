@@ -67,6 +67,8 @@ public class securityConfig {
 			.authorizeHttpRequests(authz -> authz
 				// Endpoints públicos
 				.requestMatchers("/", "/home", "/login", "/signup", "/css/**", "/imagenes/**", "/js/**").permitAll()
+				// Endpoints de Swagger UI (públicos para documentación)
+				.requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
 				// Endpoints de autenticación JWT (API REST)
 				.requestMatchers("/api/auth/**").permitAll()
 				// Endpoints de API con protección JWT

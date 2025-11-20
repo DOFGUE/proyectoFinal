@@ -1,5 +1,13 @@
 package edu.com.co.Proyecto.Final.Controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -27,6 +35,7 @@ import java.util.UUID;
  * - GET /imagenes/{nombreArchivo} - Descargar/servir imágenes
  */
 @RestController
+@Tag(name = "Gestión de Imágenes", description = "Endpoints para subir y servir imágenes del sistema")
 public class ImageController {
 	
 	@Autowired
@@ -49,7 +58,43 @@ public class ImageController {
 	 * @return JSON con el nombre del archivo guardado
 	 */
 	@PostMapping("/api/images/upload")
-	public ResponseEntity<Map<String, Object>> subirImagen(@RequestParam("file") MultipartFile file) {
+	@Operation(
+		summary = "Subir imagen",
+		description = "Sube una imagen al servidor. Formatos permitidos: jpg, jpeg, png, gif, webp, svg. Tamaño máximo: 5MB"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(
+			responseCode = "200",
+			description = "Imagen subida exitosamente",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(
+					value = "{\"success\":true,\"filename\":\"imagenes/img_123e4567-e89b-12d3-a456-426614174000.jpg\",\"message\":\"Imagen subida exitosamente\",\"url\":\"/imagenes/img_123e4567-e89b-12d3-a456-426614174000.jpg\"}"
+				)
+			)
+		),
+		@ApiResponse(
+			responseCode = "400",
+			description = "Error de validación - Archivo vacío, extensión no permitida o tamaño excedido",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(
+					value = "{\"success\":false,\"error\":\"El archivo excede el tamaño máximo de 5MB\"}"
+				)
+			)
+		),
+		@ApiResponse(
+			responseCode = "500",
+			description = "Error interno al guardar el archivo",
+			content = @Content(mediaType = "application/json")
+		)
+	})
+	public ResponseEntity<Map<String, Object>> subirImagen(
+		@Parameter(
+			description = "Archivo de imagen a subir (jpg, jpeg, png, gif, webp, svg - máx 5MB)",
+			required = true
+		)
+		@RequestParam("file") MultipartFile file) {
 		Map<String, Object> response = new HashMap<>();
 		
 		try {
@@ -121,7 +166,38 @@ public class ImageController {
 	 * Intenta buscar la imagen en múltiples ubicaciones
 	 */
 	@GetMapping("/imagenes/{nombreArchivo}")
-	public ResponseEntity<Resource> obtenerImagen(@PathVariable String nombreArchivo) {
+	@Operation(
+		summary = "Obtener imagen",
+		description = "Retorna una imagen almacenada en el servidor. Busca automáticamente en múltiples ubicaciones y determina el tipo MIME correcto"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(
+			responseCode = "200",
+			description = "Imagen encontrada y retornada exitosamente",
+			content = {
+				@Content(mediaType = "image/jpeg"),
+				@Content(mediaType = "image/png"),
+				@Content(mediaType = "image/gif")
+			}
+		),
+		@ApiResponse(
+			responseCode = "400",
+			description = "Nombre de archivo inválido o inseguro",
+			content = @Content(mediaType = "application/json")
+		),
+		@ApiResponse(
+			responseCode = "404",
+			description = "Imagen no encontrada",
+			content = @Content(mediaType = "application/json")
+		)
+	})
+	public ResponseEntity<Resource> obtenerImagen(
+		@Parameter(
+			description = "Nombre del archivo de imagen (ej: img_123.jpg)",
+			required = true,
+			example = "img_123e4567-e89b-12d3-a456-426614174000.jpg"
+		)
+		@PathVariable String nombreArchivo) {
 		try {
 			System.out.println("=== Obteniendo imagen ===");
 			System.out.println("Buscando: " + nombreArchivo);

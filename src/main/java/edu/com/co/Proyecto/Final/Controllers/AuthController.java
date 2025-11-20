@@ -5,6 +5,15 @@ import edu.com.co.Proyecto.Final.Model.LoginRequest;
 import edu.com.co.Proyecto.Final.Model.usuario;
 import edu.com.co.Proyecto.Final.Security.JwtUtil;
 import edu.com.co.Proyecto.Final.Service.usuarioService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +36,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Autenticación JWT", description = "Endpoints para autenticación con JSON Web Tokens (JWT)")
 public class AuthController {
 	
 	@Autowired
@@ -46,7 +56,50 @@ public class AuthController {
 	 * POST /api/auth/login
 	 */
 	@PostMapping("/login")
-	public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+	@Operation(
+		summary = "Iniciar sesión con JWT",
+		description = "Autentica un usuario con username y password, retornando un token JWT válido por 24 horas"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(
+			responseCode = "200",
+			description = "Autenticación exitosa - Token JWT generado",
+			content = @Content(
+				mediaType = "application/json",
+				schema = @Schema(implementation = JwtResponse.class),
+				examples = @ExampleObject(
+					value = "{\"token\":\"eyJhbGciOiJIUzI1NiJ9.eyJyb2xlcyI6IlJPTEVfVVNFUiIsInN1YiI6InVzZXIxIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwODY0MDB9.signature\",\"type\":\"Bearer\",\"username\":\"user1\",\"roles\":\"ROLE_USER\"}"
+				)
+			)
+		),
+		@ApiResponse(
+			responseCode = "401",
+			description = "Credenciales inválidas - Usuario o contraseña incorrectos",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(
+					value = "{\"error\":\"Credenciales inválidas\",\"message\":\"Usuario o contraseña incorrectos\"}"
+				)
+			)
+		),
+		@ApiResponse(
+			responseCode = "500",
+			description = "Error interno del servidor",
+			content = @Content(mediaType = "application/json")
+		)
+	})
+	public ResponseEntity<?> login(
+		@io.swagger.v3.oas.annotations.parameters.RequestBody(
+			description = "Credenciales de acceso del usuario",
+			required = true,
+			content = @Content(
+				schema = @Schema(implementation = LoginRequest.class),
+				examples = @ExampleObject(
+					value = "{\"username\":\"admin\",\"password\":\"password123\"}"
+				)
+			)
+		)
+		@RequestBody LoginRequest loginRequest) {
 		try {
 			// Autenticar al usuario
 			Authentication authentication = authenticationManager.authenticate(
@@ -88,7 +141,39 @@ public class AuthController {
 	 * GET /api/auth/validate
 	 */
 	@GetMapping("/validate")
-	public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String authHeader) {
+	@Operation(
+		summary = "Validar token JWT",
+		description = "Verifica si un token JWT es válido y retorna información del usuario"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(
+			responseCode = "200",
+			description = "Token válido",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(
+					value = "{\"valid\":true,\"username\":\"admin\",\"roles\":\"ROLE_ADMIN\"}"
+				)
+			)
+		),
+		@ApiResponse(
+			responseCode = "401",
+			description = "Token inválido o expirado",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(
+					value = "{\"valid\":false,\"message\":\"Token inválido\"}"
+				)
+			)
+		)
+	})
+	public ResponseEntity<?> validateToken(
+		@Parameter(
+			description = "Token JWT en formato: Bearer <token>",
+			required = true,
+			example = "Bearer eyJhbGciOiJIUzI1NiJ9..."
+		)
+		@RequestHeader("Authorization") String authHeader) {
 		try {
 			if (authHeader != null && authHeader.startsWith("Bearer ")) {
 				String token = authHeader.substring(7);
@@ -122,7 +207,35 @@ public class AuthController {
 	 * GET /api/auth/me
 	 */
 	@GetMapping("/me")
-	public ResponseEntity<?> getCurrentUser(Authentication authentication) {
+	@Operation(
+		summary = "Obtener perfil del usuario autenticado",
+		description = "Retorna la información completa del usuario que está autenticado con el token JWT",
+		security = @SecurityRequirement(name = "bearerAuth")
+	)
+	@ApiResponses(value = {
+		@ApiResponse(
+			responseCode = "200",
+			description = "Información del usuario obtenida exitosamente",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(
+					value = "{\"id\":1,\"username\":\"admin\",\"email\":\"admin@example.com\",\"telefono\":3001234567,\"descripcion\":\"Administrador del sistema\",\"rol\":\"ADMIN\"}"
+				)
+			)
+		),
+		@ApiResponse(
+			responseCode = "401",
+			description = "No autenticado - Token no válido o no proporcionado",
+			content = @Content(
+				mediaType = "application/json",
+				examples = @ExampleObject(
+					value = "\"No autenticado\""
+				)
+			)
+		)
+	})
+	public ResponseEntity<?> getCurrentUser(
+		@Parameter(hidden = true) Authentication authentication) {
 		if (authentication != null && authentication.isAuthenticated()) {
 			String username = authentication.getName();
 			usuario user = usuarioService.buscarPorNombreUsuario(username);
