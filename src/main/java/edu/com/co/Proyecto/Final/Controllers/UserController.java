@@ -1,5 +1,10 @@
 package edu.com.co.Proyecto.Final.Controllers;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -29,6 +34,7 @@ import java.util.Optional;
  */
 @Controller
 @RequestMapping("/user")
+@Tag(name = "Usuario", description = "Gestión de perfil de usuario y visualización de productos (requiere rol USER o ADMIN)")
 public class UserController {
 	
 	@Autowired
@@ -59,6 +65,11 @@ public class UserController {
 	 * Muestra lista de productos disponibles
 	 */
 	@GetMapping("/home")
+	@Operation(
+		summary = "Página de inicio del usuario",
+		description = "Muestra la página principal con todos los productos disponibles para el usuario autenticado"
+	)
+	@ApiResponse(responseCode = "200", description = "Página cargada exitosamente")
 	public String userHome(Model model) {
 		try {
 			// Obtener todos los productos para mostrar
@@ -75,6 +86,11 @@ public class UserController {
 	 * Ruta: GET /user/productos
 	 */
 	@GetMapping("/productos")
+	@Operation(
+		summary = "Ver todos los productos",
+		description = "Lista todos los productos disponibles en el sistema"
+	)
+	@ApiResponse(responseCode = "200", description = "Lista de productos obtenida exitosamente")
 	public String verProductos(Model model) {
 		try {
 			model.addAttribute("productos", productoService.obtenerTodosProductos());
@@ -90,7 +106,17 @@ public class UserController {
 	 * Ruta: GET /user/producto/{id}
 	 */
 	@GetMapping("/producto/{id}")
-	public String verProductoDetalle(@PathVariable Long id, Model model) {
+	@Operation(
+		summary = "Ver detalle de producto",
+		description = "Muestra los detalles completos de un producto incluyendo sus reseñas"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Detalle del producto cargado"),
+		@ApiResponse(responseCode = "302", description = "Producto no encontrado - Redirige a lista de productos")
+	})
+	public String verProductoDetalle(
+		@Parameter(description = "ID del producto", required = true, example = "1")
+		@PathVariable Long id, Model model) {
 		try {
 			var productoOpt = productoService.obtenerProductoPorId(id);
 			
@@ -115,7 +141,12 @@ public class UserController {
 	 * Ruta: GET /user/profile
 	 */
 	@GetMapping("/profile")
-	public String userProfile(Model model, Authentication authentication) {
+	@Operation(
+		summary = "Ver perfil del usuario",
+		description = "Muestra el perfil completo del usuario autenticado incluyendo sus reseñas"
+	)
+	@ApiResponse(responseCode = "200", description = "Perfil cargado exitosamente")
+	public String userProfile(Model model, @Parameter(hidden = true) Authentication authentication) {
 		try {
 			usuario usuarioActual = obtenerUsuarioAutenticado(authentication);
 			
@@ -139,7 +170,12 @@ public class UserController {
 	 * Ruta: GET /user/profile/edit
 	 */
 	@GetMapping("/profile/edit")
-	public String editProfileForm(Model model, Authentication authentication) {
+	@Operation(
+		summary = "Formulario de edición de perfil",
+		description = "Muestra el formulario para editar el perfil del usuario autenticado"
+	)
+	@ApiResponse(responseCode = "200", description = "Formulario cargado exitosamente")
+	public String editProfileForm(Model model, @Parameter(hidden = true) Authentication authentication) {
 		try {
 			usuario usuarioActual = obtenerUsuarioAutenticado(authentication);
 			
@@ -159,12 +195,23 @@ public class UserController {
 	 * Todas las validaciones se ejecutan en el servicio
 	 */
 	@PostMapping("/profile/edit")
+	@Operation(
+		summary = "Actualizar perfil de usuario",
+		description = "Procesa la actualización del perfil del usuario con validaciones completas de email, teléfono y descripción"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "302", description = "Perfil actualizado exitosamente - Redirige al perfil"),
+		@ApiResponse(responseCode = "200", description = "Error de validación - Muestra formulario con errores")
+	})
 	public String updateProfile(
+			@Parameter(description = "Email del usuario", required = true, example = "usuario@example.com")
 			@RequestParam String emailUsuario,
+			@Parameter(description = "Número de teléfono (mínimo 10 dígitos)", required = true, example = "3001234567")
 			@RequestParam Long numeroTelefonoUsuario,
+			@Parameter(description = "Descripción del usuario (máximo 500 caracteres)", required = false)
 			@RequestParam(required = false) String descripcionUsuario,
 			Model model,
-			Authentication authentication) {
+			@Parameter(hidden = true) Authentication authentication) {
 		
 		try {
 			usuario usuarioActual = obtenerUsuarioAutenticado(authentication);
