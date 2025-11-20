@@ -484,7 +484,7 @@ public class UserController {
 			var producto = productoOpt.get();
 			
 			// Número de WhatsApp centralizado (puede venir de configuración o BD)
-			String numeroWhatsApp = "573160423358";
+			String numeroWhatsApp = "573174865490";
 			
 			// Construir mensaje
 			String nombreProducto = producto.getNombreProducto();

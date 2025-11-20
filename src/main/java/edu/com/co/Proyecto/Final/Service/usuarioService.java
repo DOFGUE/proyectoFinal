@@ -38,6 +38,12 @@ public class usuarioService {
 		return usuarioRepo.findByNombreUsuario(nombreUsuario);
 	}
 	
+	// Buscar usuario por nombre (retorna objeto directamente)
+	public usuario buscarPorNombreUsuario(String nombreUsuario) {
+		return usuarioRepo.findByNombreUsuario(nombreUsuario)
+			.orElse(null);
+	}
+	
 	// Registrar nuevo usuario (desde signup)
 	public usuario registrarNuevoUsuario(String nombreUsuario, String emailUsuario, String contrasenaUsuario, 
 										 String confirmPassword, Long numeroTelefonoUsuario, String descripcionUsuario) {
