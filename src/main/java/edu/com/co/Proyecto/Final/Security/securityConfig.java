@@ -12,6 +12,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
@@ -20,6 +21,9 @@ public class securityConfig {
 	
 	@Autowired
 	private usuarioDetailsService usuarioDetailsService;
+	
+	@Autowired
+	private JwtAuthenticationFilter jwtAuthenticationFilter;
 	
 	/**
 	 * Configuración del encoder de contraseñas
@@ -61,12 +65,22 @@ public class securityConfig {
 		http
 			// Configuración de autorización por rutas
 			.authorizeHttpRequests(authz -> authz
+				// Endpoints públicos
 				.requestMatchers("/", "/home", "/login", "/signup", "/css/**", "/imagenes/**", "/js/**").permitAll()
+				// Endpoints de autenticación JWT (API REST)
+				.requestMatchers("/api/auth/**").permitAll()
+				// Endpoints de API con protección JWT
+				.requestMatchers("/api/admin/**").hasRole("ADMIN")
+				.requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
+				// Endpoints web tradicionales
 				.requestMatchers("/admin/**").hasRole("ADMIN")
 				.requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
 				.requestMatchers("/access-denied").permitAll()
 				.anyRequest().authenticated()
 			)
+			
+			// Agregar el filtro JWT antes del filtro de autenticación de usuario/contraseña
+			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 			
 			// Configuración de sesión
 			.sessionManagement(session -> session
