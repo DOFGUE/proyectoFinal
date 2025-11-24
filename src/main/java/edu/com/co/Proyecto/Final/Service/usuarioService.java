@@ -38,6 +38,11 @@ public class usuarioService {
 		return usuarioRepo.findByNombreUsuario(nombreUsuario);
 	}
 	
+	// Obtener usuario por email (para OAuth2)
+	public Optional<usuario> obtenerUsuarioPorEmail(String email) {
+		return usuarioRepo.findByEmailUsuario(email);
+	}
+	
 	// Buscar usuario por nombre (retorna objeto directamente)
 	public usuario buscarPorNombreUsuario(String nombreUsuario) {
 		return usuarioRepo.findByNombreUsuario(nombreUsuario)

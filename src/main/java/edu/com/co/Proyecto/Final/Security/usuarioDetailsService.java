@@ -13,6 +13,7 @@ import edu.com.co.Proyecto.Final.Model.usuario;
 import edu.com.co.Proyecto.Final.Repository.usuarioRepository;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -23,18 +24,35 @@ public class usuarioDetailsService implements UserDetailsService {
 	
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		usuario usuario = usuarioRepository.findByNombreUsuario(username)
+		// Intentar buscar por nombre de usuario primero
+		Optional<usuario> usuarioOpt = usuarioRepository.findByNombreUsuario(username);
+		
+		// Si no se encuentra, intentar buscar por email (para OAuth2)
+		if (usuarioOpt.isEmpty()) {
+			usuarioOpt = usuarioRepository.findByEmailUsuario(username);
+		}
+		
+		usuario usuario = usuarioOpt
 			.orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + username));
 		
 		// Crear las autoridades basadas en el rol del usuario
 		Set<GrantedAuthority> authorities = new HashSet<>();
 		if (usuario.getRol() != null) {
-			authorities.add(new SimpleGrantedAuthority("ROLE_" + usuario.getRol().getNombreRol()));
+			String roleName = usuario.getRol().getNombreRol();
+			// Agregar el prefijo ROLE_ si no lo tiene
+			String authority = roleName.startsWith("ROLE_") ? roleName : "ROLE_" + roleName;
+			authorities.add(new SimpleGrantedAuthority(authority));
+		}
+		
+		// Para usuarios OAuth2 sin contraseña, usar un placeholder
+		String password = usuario.getContrasenaUsuario();
+		if (password == null || password.isEmpty()) {
+			password = "{noop}"; // Usuarios OAuth2 no usan contraseña
 		}
 		
 		return User.builder()
 			.username(usuario.getNombreUsuario())
-			.password(usuario.getContrasenaUsuario())
+			.password(password)
 			.authorities(authorities)
 			.accountExpired(false)
 			.accountLocked(false)

@@ -25,13 +25,11 @@ public class securityConfig {
 	@Autowired
 	private JwtAuthenticationFilter jwtAuthenticationFilter;
 	
-	/**
-	 * Configuración del encoder de contraseñas
-	 */
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder(12);
-	}
+	@Autowired
+	private CustomOAuth2UserService customOAuth2UserService;
+	
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 	
 	/**
 	 * Configuración del proveedor de autenticación
@@ -40,7 +38,7 @@ public class securityConfig {
 	public DaoAuthenticationProvider authenticationProvider() {
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
 		authProvider.setUserDetailsService(usuarioDetailsService);
-		authProvider.setPasswordEncoder(passwordEncoder());
+		authProvider.setPasswordEncoder(passwordEncoder);
 		authProvider.setHideUserNotFoundExceptions(true);
 		return authProvider;
 	}
@@ -123,6 +121,33 @@ public class securityConfig {
 				.permitAll()
 			)
 			
+			// Configuración de OAuth2 Login (Google)
+			.oauth2Login(oauth2 -> oauth2
+				.loginPage("/login")
+				.userInfoEndpoint(userInfo -> userInfo
+					.userService(customOAuth2UserService)
+				)
+				.successHandler((request, response, authentication) -> {
+					// Debug: Mostrar las autoridades del usuario
+					System.out.println("OAuth2 Authentication successful!");
+					System.out.println("Principal: " + authentication.getPrincipal());
+					System.out.println("Authorities: " + authentication.getAuthorities());
+					authentication.getAuthorities().forEach(auth -> 
+						System.out.println("  - Authority: " + auth.getAuthority())
+					);
+					
+					// Redirige según el rol del usuario
+					if (authentication.getAuthorities().stream()
+						.anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"))) {
+						System.out.println("Redirecting to /admin/home");
+						response.sendRedirect("/admin/home");
+					} else {
+						System.out.println("Redirecting to /user/home");
+						response.sendRedirect("/user/home");
+					}
+				})
+			)
+			
 			// Configuración de logout
 			.logout(logout -> logout
 				.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
@@ -145,8 +170,7 @@ public class securityConfig {
 			.csrf(csrf -> csrf.disable())
 			
 			// Seguridad adicional
-			.httpBasic(basic -> basic.disable())
-			.anonymous(anon -> anon.disable());
+			.httpBasic(basic -> basic.disable());
 		
 		return http.build();
 	}

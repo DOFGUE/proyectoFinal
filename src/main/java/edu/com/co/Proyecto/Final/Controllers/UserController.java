@@ -47,15 +47,23 @@ public class UserController {
 	private productoService productoService;
 	
 	/**
-	 * Obtener el usuario autenticado desde el nombre de usuario
+	 * Obtener el usuario autenticado desde el nombre de usuario o email (OAuth2)
 	 */
 	private usuario obtenerUsuarioAutenticado(Authentication authentication) {
 		if (authentication == null || !authentication.isAuthenticated()) {
 			return null;
 		}
 		
-		String username = authentication.getName();
-		Optional<usuario> usuarioOpt = usuarioService.obtenerUsuarioPorNombre(username);
+		String identifier = authentication.getName();
+		
+		// Intentar buscar por nombre de usuario primero
+		Optional<usuario> usuarioOpt = usuarioService.obtenerUsuarioPorNombre(identifier);
+		
+		// Si no se encuentra, intentar buscar por email (para OAuth2)
+		if (usuarioOpt.isEmpty()) {
+			usuarioOpt = usuarioService.obtenerUsuarioPorEmail(identifier);
+		}
+		
 		return usuarioOpt.orElse(null);
 	}
 	
@@ -255,7 +263,17 @@ public class UserController {
 	 * Ruta: GET /user/reviews/new/{productoId}
 	 */
 	@GetMapping("/reviews/new/{productoId}")
-	public String newReviewForm(@PathVariable Long productoId, Model model, Authentication authentication) {
+	@Operation(
+		summary = "Formulario para crear reseña",
+		description = "Muestra el formulario para crear una nueva reseña de un producto. Si el usuario ya tiene una reseña para este producto, lo redirige al formulario de edición"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Formulario de nueva reseña mostrado"),
+		@ApiResponse(responseCode = "302", description = "Reseña ya existe - Redirige a formulario de edición, o producto no encontrado")
+	})
+	public String newReviewForm(
+		@Parameter(description = "ID del producto a reseñar", required = true, example = "1")
+		@PathVariable Long productoId, Model model, @Parameter(hidden = true) Authentication authentication) {
 		try {
 			var productoOpt = productoService.obtenerProductoPorId(productoId);
 			
@@ -291,12 +309,23 @@ public class UserController {
 	 * Ruta: POST /user/reviews/new/{productoId}
 	 */
 	@PostMapping("/reviews/new/{productoId}")
+	@Operation(
+		summary = "Crear nueva reseña",
+		description = "Procesa la creación de una nueva reseña para un producto. Valida que el producto exista, que el usuario no tenga ya una reseña para ese producto, y que la calificación esté entre 1 y 5"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "302", description = "Reseña creada exitosamente - Redirige al detalle del producto"),
+		@ApiResponse(responseCode = "302", description = "Error de validación - Redirige con mensaje de error")
+	})
 	public String createReview(
+			@Parameter(description = "ID del producto a reseñar", required = true, example = "1")
 			@PathVariable Long productoId,
+			@Parameter(description = "Calificación del producto (1-5 estrellas)", required = true, example = "5")
 			@RequestParam Integer calificacion,
+			@Parameter(description = "Comentario opcional sobre el producto", required = false, example = "Excelente producto, muy recomendado")
 			@RequestParam(required = false) String comentarioResena,
 			Model model,
-			Authentication authentication) {
+			@Parameter(hidden = true) Authentication authentication) {
 		
 		try {
 			usuario usuarioActual = obtenerUsuarioAutenticado(authentication);
@@ -338,7 +367,17 @@ public class UserController {
 	 * Ruta: GET /user/reviews/edit/{resenaId}
 	 */
 	@GetMapping("/reviews/edit/{resenaId}")
-	public String editReviewForm(@PathVariable Long resenaId, Model model, Authentication authentication) {
+	@Operation(
+		summary = "Formulario para editar reseña",
+		description = "Muestra el formulario para editar una reseña existente. Solo el propietario de la reseña puede acceder"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Formulario de edición mostrado"),
+		@ApiResponse(responseCode = "302", description = "Reseña no encontrada o usuario no autorizado - Redirige al perfil")
+	})
+	public String editReviewForm(
+		@Parameter(description = "ID de la reseña a editar", required = true, example = "1")
+		@PathVariable Long resenaId, Model model, @Parameter(hidden = true) Authentication authentication) {
 		try {
 			var resenaOpt = resenaService.obtenerResenaPorId(resenaId);
 			
@@ -372,12 +411,23 @@ public class UserController {
 	 * Ruta: POST /user/reviews/edit/{resenaId}
 	 */
 	@PostMapping("/reviews/edit/{resenaId}")
+	@Operation(
+		summary = "Actualizar reseña existente",
+		description = "Procesa la actualización de una reseña. Valida que el usuario sea el propietario, que la reseña exista y que la calificación esté entre 1 y 5"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "302", description = "Reseña actualizada exitosamente - Redirige al detalle del producto"),
+		@ApiResponse(responseCode = "302", description = "Error de validación o no autorizado - Redirige con mensaje de error")
+	})
 	public String updateReview(
+			@Parameter(description = "ID de la reseña a actualizar", required = true, example = "1")
 			@PathVariable Long resenaId,
+			@Parameter(description = "Nueva calificación del producto (1-5 estrellas)", required = true, example = "4")
 			@RequestParam Integer calificacion,
+			@Parameter(description = "Nuevo comentario opcional sobre el producto", required = false, example = "Actualicé mi opinión, sigue siendo muy bueno")
 			@RequestParam(required = false) String comentarioResena,
 			Model model,
-			Authentication authentication) {
+			@Parameter(hidden = true) Authentication authentication) {
 		
 		try {
 			usuario usuarioActual = obtenerUsuarioAutenticado(authentication);
@@ -419,7 +469,17 @@ public class UserController {
 	 * Ruta: POST /user/reviews/delete/{resenaId}
 	 */
 	@PostMapping("/reviews/delete/{resenaId}")
-	public String deleteReview(@PathVariable Long resenaId, Authentication authentication) {
+	@Operation(
+		summary = "Eliminar reseña",
+		description = "Elimina una reseña existente. Solo el propietario de la reseña puede eliminarla"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "302", description = "Reseña eliminada exitosamente - Redirige al perfil de usuario"),
+		@ApiResponse(responseCode = "302", description = "Reseña no encontrada o usuario no autorizado - Redirige con mensaje de error")
+	})
+	public String deleteReview(
+		@Parameter(description = "ID de la reseña a eliminar", required = true, example = "1")
+		@PathVariable Long resenaId, @Parameter(hidden = true) Authentication authentication) {
 		try {
 			usuario usuarioActual = obtenerUsuarioAutenticado(authentication);
 			
@@ -453,7 +513,17 @@ public class UserController {
 	 * Ruta: GET /user/products/{productoId}
 	 */
 	@GetMapping("/products/{productoId}")
-	public String viewProductDetail(@PathVariable Long productoId, Model model) {
+	@Operation(
+		summary = "Ver detalle de producto con reseñas",
+		description = "Muestra el detalle completo de un producto incluyendo todas sus reseñas y el total de reseñas"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Detalle del producto con reseñas cargado exitosamente"),
+		@ApiResponse(responseCode = "302", description = "Producto no encontrado - Redirige a la página principal")
+	})
+	public String viewProductDetail(
+		@Parameter(description = "ID del producto a visualizar", required = true, example = "1")
+		@PathVariable Long productoId, Model model) {
 		try {
 			var productoOpt = productoService.obtenerProductoPorId(productoId);
 			
@@ -483,7 +553,15 @@ public class UserController {
 	 * @return Página con resultados de búsqueda
 	 */
 	@GetMapping("/buscar")
+	@Operation(
+		summary = "Buscar productos",
+		description = "Busca productos por nombre, descripción o ingredientes. Si no se proporciona término de búsqueda, muestra todos los productos"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Resultados de búsqueda obtenidos exitosamente")
+	})
 	public String buscarProductos(
+			@Parameter(description = "Término de búsqueda (nombre, descripción o ingredientes)", required = false, example = "chocolate")
 			@RequestParam(required = false, defaultValue = "") String q,
 			Model model) {
 		try {
@@ -519,7 +597,17 @@ public class UserController {
 	 */
 	@GetMapping("/api/whatsapp-link/{productoId}")
 	@ResponseBody
-	public ResponseEntity<?> generarLinkWhatsApp(@PathVariable Long productoId) {
+	@Operation(
+		summary = "Generar link de WhatsApp para pedido",
+		description = "Genera un link de WhatsApp con mensaje predefinido para realizar un pedido del producto. Retorna JSON con la URL de WhatsApp"
+	)
+	@ApiResponses(value = {
+		@ApiResponse(responseCode = "200", description = "Link de WhatsApp generado exitosamente"),
+		@ApiResponse(responseCode = "404", description = "Producto no encontrado")
+	})
+	public ResponseEntity<?> generarLinkWhatsApp(
+		@Parameter(description = "ID del producto para ordenar", required = true, example = "1")
+		@PathVariable Long productoId) {
 		try {
 			var productoOpt = productoService.obtenerProductoPorId(productoId);
 			

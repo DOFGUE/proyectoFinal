@@ -15,17 +15,23 @@ public class usuario {
 	@Column(nullable = false, unique = true, length = 100)
 	private String nombreUsuario;
 	
-	@Column(nullable = false, length = 100)
+	@Column(nullable = false, length = 255)
 	private String contrasenaUsuario;
 	
 	@Column(nullable = false, unique = true, length = 100)
 	private String emailUsuario;
 	
-	@Column(nullable = false)
+	@Column(nullable = true)
 	private Long numeroTelefonoUsuario;
 	
 	@Column(nullable = true, columnDefinition = "TEXT")
 	private String descripcionUsuario;
+	
+	@Column(nullable = true, length = 50)
+	private String provider;
+	
+	@Column(nullable = true, length = 100)
+	private String providerId;
 	
 	@ManyToOne
 	@JoinColumn(name = "idRol", nullable = false)
@@ -104,6 +110,22 @@ public class usuario {
 	
 	public void setResenas(List<resena> resenas) {
 		this.resenas = resenas;
+	}
+	
+	public String getProvider() {
+		return provider;
+	}
+	
+	public void setProvider(String provider) {
+		this.provider = provider;
+	}
+	
+	public String getProviderId() {
+		return providerId;
+	}
+	
+	public void setProviderId(String providerId) {
+		this.providerId = providerId;
 	}
 	
 }
